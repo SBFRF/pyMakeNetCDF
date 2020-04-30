@@ -82,7 +82,7 @@ def ncFile2ncFile(inputFile, globalYaml, varYaml):
         globalMetaData['dateIssued'] = dateIssued.strftime('%Y-%m-%d')
     # read in variable metadata
     varMetData = import_template_file(varYaml)
-    data_lib, varMetaNetCDF, globalMetaNetCDF = readNetCDFfile(inputFile)
+    data_lib, dimensionLib, varMetaNetCDF, globalMetaNetCDF = readNetCDFfile(inputFile)
     # now combine netCDF variable and global metaData
     globalMetaData = combineGlobalMetaData(globalMetaData, globalMetaNetCDF)
     varMetData = combineVaribleMetaData(varMetData, varMetaNetCDF)
@@ -100,16 +100,45 @@ def ncFile2ncFile(inputFile, globalYaml, varYaml):
     fid.close()
     
 def readNetCDFfile(inputFile):
-    """
+    """Opens inputNetCDF file and creates dictionaries for data, dimensions, variable meta data and global metadata.
     
     Args:
         inputFile: input netCDF file
 
     Returns:
-        data_lib, varMetaData, globalMetaData
+        data_lib, dimensionLib,  varMetaData, globalMetaData
         
     """
+    ncfile = nc.Dataset(inputFile)
+    dimensionLib = ncfile.dimensions
+    data_Lib = ncfile.variables
+    # now collect variables and metadata
+    varMetaData = {'_variables':[], '_attributes':[], '_dimensions':[]}
+    globalMetaData = {}
     
+    # First: get all global Metadata
+    for att in ncfile.ncattrs():
+        globalMetaData[att] = ncfile.getncattr(att)
+    # Second: write dimensions
+    for dd, dim in enumerate(dimensionLib):
+       varMetaData['_dimensions'].append(dim)
+    
+    # Third: get variable names and attributes
+    for ncVar in data_Lib:
+        print(ncVar)
+        varMetaData['_variables'].append(ncVar)                          # add variable to list of variables to write
+        
+        varMetaData[ncVar] = {
+                'name': data_Lib[ncVar].name,
+                'dim': list(data_Lib[ncVar].dimensions),
+                'chunking': data_Lib[ncVar].chunking(),
+                }
+        for var in data_Lib[ncVar].ncattrs():                             # add attributes to variable metadatalist
+            varMetaData[ncVar][var] = data_Lib[ncVar].getncattr(var)
+    ncfile.close()
+
+    return data_Lib, dimensionLib,  varMetaData, globalMetaData
+
 def readDimensions(inputFile):
     """
     
