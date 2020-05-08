@@ -52,17 +52,42 @@ def readflags(flagfname, header=1):
              }
     return flags
 
-def ncFile2ncFile(inputFile, globalYaml, varYaml):
-    """Updates inputFile with new variables in varYaml and global Meta data in global Yaml
+def makenc_generic(inputfname, globalYaml, varYaml, data):
+    """
     
     Args:
-        inputFile:
-        globalYml:
+        inputfname:
+        globalYaml:
         varYaml:
-
+        data:
+        
     Returns:
 
     """
+    varMetData = import_template_file(varYaml)
+    globalMetaData = import_template_file(globalYaml)
+    fid = init_nc_file(inputfname, globalMetaData)
+    # create dimensions
+    _createDimensions(fid, varMetData, data)
+    # write variables and data
+    write_data_to_nc(fid, varMetData, data)
+    fid.close()
+    
+def ncFile2ncFile(inputFile, globalYaml, varYaml, **kwargs):
+    """Updates inputFile with new variables in varYaml and global Meta data in global Yaml
+    
+    Args:
+        globalYaml:
+        inputFile (object):
+        varYaml:
+
+    Keyword Args:
+        'mesh data' a dictionary containing mesh topology
+        
+    Returns:
+
+    """
+    meshData = kwargs.get('meshData', None)
     dateCreated = DT.date.today()
     dateIssued = dateCreated
     geospatial_lon_min = None  # other spatial data
@@ -84,8 +109,8 @@ def ncFile2ncFile(inputFile, globalYaml, varYaml):
     varMetData = import_template_file(varYaml)
     data_lib, dimensionLib, varMetaNetCDF, globalMetaNetCDF = readNetCDFfile(inputFile)
     # now combine netCDF variable and global metaData
-    globalMetaData = combineGlobalMetaData(globalMetaData, globalMetaNetCDF)
-    varMetData = combineVaribleMetaData(varMetData, varMetaNetCDF)
+    globalMetaData = _combineGlobalMetaData(globalMetaData, globalMetaNetCDF)
+    varMetData = _combineVaribleMetaData(varMetData, varMetaNetCDF)
     
     # begin File writing proceedure
     ####### should this be its own function and the above be input specific (matlab, python, or netCDF file) ###########
@@ -93,12 +118,45 @@ def ncFile2ncFile(inputFile, globalYaml, varYaml):
     fid = init_nc_file(inputFile, globalMetaData)
     # create dimensions
     inputFileDimensions = readDimensions(inputFile)
-    createDimensions(varMetData, inputFileDimensions)
+    _createDimensions(varMetData, inputFileDimensions)
     # write variables and data
     write_data_to_nc(fid, varMetData, data_lib)
     print('Write capability for compression to combine with significant digit attribute')
     fid.close()
     
+def _combineGlobalMetaData(newGlobalMetaData, originalGlobalMetaData):
+    """Combines global metadata from original file to new data.
+    
+    Function will combine two metadata dictionaries.  If there is a conflict with attribute name, function will take
+    preference to the newGlobalMetaData values.
+    
+    Args:
+        newGlobalMetaData: data takes preference over original metadata below
+        originalGlobalMetaData: files original metaData
+
+    Returns:
+        globalMetaData dictionary that can be used in this package for writing netCDF files
+
+    """
+    return originalGlobalMetaData.update(newGlobalMetaData)
+
+def _combineVaribleMetaData(newVarMetaData, oldVarMetaData):
+    """Combines metatdata dictionaries for variables.
+    
+    Function will combine two metadata dictionaries.  If there is a conflict with attribute name, function will take
+    preference to the newVarMetaData values.
+    
+    Args:
+        newVarMetaData: input metadata dictionary from readNetCDFfile function
+        oldVarMetaData: input metadata dictionary from import_template_file function
+
+    Returns:
+        variableMetaData dictionary
+    """
+    print('do stuff')
+
+    return variableMetaData
+
 def readNetCDFfile(inputFile):
     """Opens inputNetCDF file and creates dictionaries for data, dimensions, variable meta data and global metadata.
     
@@ -125,7 +183,6 @@ def readNetCDFfile(inputFile):
     
     # Third: get variable names and attributes
     for ncVar in data_Lib:
-        print(ncVar)
         varMetaData['_variables'].append(ncVar)                          # add variable to list of variables to write
         
         varMetaData[ncVar] = {
@@ -135,7 +192,8 @@ def readNetCDFfile(inputFile):
                 }
         for var in data_Lib[ncVar].ncattrs():                             # add attributes to variable metadatalist
             varMetaData[ncVar][var] = data_Lib[ncVar].getncattr(var)
-    ncfile.close()
+
+    ncfile.close()                                                        # close file
 
     return data_Lib, dimensionLib,  varMetaData, globalMetaData
 
@@ -149,17 +207,26 @@ def readDimensions(inputFile):
 
     """
     
-def createDimensions(varMetaData, dimensionData):
+def _createDimensions(fid, varMetaData, data):
     """
     
     Args:
+        fid: file id of open netCDF file (should have global meta data by this point)
         varMetaData: varMetaData dictionary
-        dimensionData: dictionary with dimension name and size
+        data: dictionary with dimension name and size
 
     Returns:
-
-    """
+        None
     
+    """
+    for dim in varMetaData['_dimensions']:  # loop through each dimension
+        # first check that dimensions have corresponding variables (CF assumption)
+        assert(dim in varMetaData['_variables']), "dimension {} doesn't have a corresponding variable".format(dim)
+        try:
+            fid.createDimension(dim, len(data[dim]))
+        except TypeError:  # in the event you have a np.array(1) -- singlton dimensionally zero so no len
+            fid.createDimension(dim, np.size(data[dim]))
+        
 def import_template_file(yaml_location):
     """This function loads a yaml file and returns the attributes in dictionary.
     
@@ -212,8 +279,8 @@ def init_nc_file(nc_filename, attributes):
 def write_data_to_nc(ncfile, template_vars, data_dict, write_vars='_variables'):
     """This function writes the variables, data, and the variable attributes to the netCDF file.
 
-    in the yaml, the "[variable]:" needs to be in the data dictionary,
-     the output netcdf variable will take the name "name:"
+    In the yaml, the "[variable]:" needs to be in the data dictionary, the output netcdf variable will take the name
+    "name:"
     
     Args:
       ncfile: this is an alreayd opened netCDF file with already defined dimensions
@@ -243,17 +310,20 @@ def write_data_to_nc(ncfile, template_vars, data_dict, write_vars='_variables'):
                          'missing_value']
 
     # Write variables to file
-    
-
-    for var in accept_vars:  # only write varibles that were loaded from .yaml file
+    for var in accept_vars:             # only write varibles that were loaded from [_variables] attirbute in .yaml file
         if var in data_dict:
             try:
                 if "fill_value" in template_vars[var] and "least_significant_digit" in template_vars[var]:
+                    if 'comp_level' not in template_vars[var]:  # set default
+                        template_vars[var]['comp_level'] = 6    # set above default 4 level by package
                     new_var = ncfile.createVariable(template_vars[var]["name"],
                                                     template_vars[var]["data_type"],
                                                     template_vars[var]["dim"],
                                                     fill_value=template_vars[var]["fill_value"],
-                                                    least_significant_digit=template_vars[var]['least_significant_digit'] )
+                                                    least_significant_digit=template_vars[var][
+                                                        'least_significant_digit'],
+                                                    zlib=True,
+                                                    complevel=template_vars[var]['comp_level'])
                 elif "fill_value" in template_vars[var]:
                     new_var = ncfile.createVariable(template_vars[var]["name"], template_vars[var]["data_type"],
                             template_vars[var]["dim"], fill_value=template_vars[var]["fill_value"])
@@ -396,7 +466,7 @@ def makenc_field(data_lib, globalyaml_fname, flagfname, ofname, var_yaml_fname):
 
     # bathydate = fid.createDimension('bathyDate_length', np.size(data_lib['bathymetryDate']))
 
-    # write data to the nc file
+    # write data to the ncfile file
     write_data_to_nc(fid, var_atts, data_lib)
     # close file
     fid.close()
@@ -503,7 +573,7 @@ def makenc_Station(stat_data, globalyaml_fname, flagfname, ofname, stat_yaml_fna
       ofname: output file name
 
     Returns:
-      a nc file with station data in it
+      a ncfile file with station data in it
 
     """
      # import global yaml data
@@ -533,7 +603,7 @@ def makenc_Station(stat_data, globalyaml_fname, flagfname, ofname, stat_yaml_fna
     #
     # convert to Lat/lon here
 
-    # write data to the nc file
+    # write data to the ncfile file
     write_data_to_nc(fid, stat_var_atts, stat_data)
     # close file
     fid.close()
@@ -644,7 +714,7 @@ def makeDirectionalWavesWHOI(ofname, dataDict, globalYaml, varYaml):
     dirbin = fid.createDimension('waveDirectionBins', np.size(dataDict['directionBands']))
     frqbin = fid.createDimension('waveFrequency', np.size(dataDict['freqBands']))
 
-    # write data to the nc file
+    # write data to the ncfile file
     write_data_to_nc(fid, varAtts, dataDict)
     # close file
     fid.close()
@@ -682,7 +752,7 @@ def makenc_CSHORErun(ofname, dataDict, globalYaml, varYaml):
 
     Args:
       dataDict: keys:
-        time: - time steps of the simulation nc file
+        time: - time steps of the simulation ncfile file
 
         xFRF: - xFRF positions of the simulation
 
