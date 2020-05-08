@@ -35,4 +35,4 @@ for ss, station in enumerate(nc.chartostring(ncfile['station_name'][:])):
            'directionalWaveEnergyDensity': dWEDout[:,ss],
            'station_name': station
     }
-    p2nc.makenc_generic('test{}.nc'.format(ss), globalYaml, varYaml, out)
+    p2nc.makenc_generic('test_{}.nc'.format(station), globalYaml, varYaml, out)
