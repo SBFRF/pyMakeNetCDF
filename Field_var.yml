@@ -1,7 +1,96 @@
 # Spatial WAVE TEMPLATE
-_variables: ['time', 'xFRF', 'yFRF', 'longitude', 'latitude', 'station_name', 'waveHs', 'waveTm', 'waveDm', 'waveTp', 'bathymetry', 'xRadGrad', 'yRadGrad', 'dissipation', 'bathymetryDate', 'qcFlags']
+_variables: ['time', 'longitude', 'latitude', 'nodes', 'meshName', 'three', 'faces', 'waveHs']
 _attributes: ['notes']
-_dimensions: ['time', 'station_name_length', 'xFRF', 'yFRF']
+_dimensions: ['time', 'faces', 'nodes', 'three']
+
+meshName:
+    name: 'meshName'
+    cf_role: 'mesh_topology'
+    topology_dimension: 2
+    node_coordinates: 'latitude longitude'    # points to the auxiliary coordinate variables representing the node locations (latitude,
+    face_node_connectivity: 'connectivity'    # points to an index variable identifying for every face (here consistently triangle) the indices of its three corner nodes. The corner nodes should be specified in anticlockwise (also referred to as counterclockwise) direction as viewed from above (consistent with the CF-convention for bounds of p-sided cells). The connectivity array will thus be a matrix of size nFaces x 3.
+    face_dimension: 'faces'
+    notes: 'this variable contains no data.  It is solely here to describe the mesh and where appropriate data are. The attributes are used to point to variables describing the mesh topology'
+    data_type: 'i2'
+    dim: []
+    units: '1'
+
+connectivity:
+    name: 'connectivity'
+    cf_role: 'face_node_connectivity'
+    start_index: 0
+    long_name: "Topology data of 2D unstructured mesh"
+    node_coordinates: ["latitude", "longitude"]
+    face_dimension: "nFaces"
+    notes: 'This variable describes the connectivity between nodes'
+
+longitude:
+    name: 'longitude'
+    units: "degrees_east"
+    axis: 'X'
+    standard_name: 'longitude'
+    long_name: 'longitude'
+    data_type: 'f8'
+    dim: ['nodes']
+    fill_value: '-999'
+    short_name: 'lon'
+
+latitude:
+    name: 'latitude'
+    units: 'degrees_north'
+    axis: 'Y'
+    standard_name: 'latitude'
+    long_name: 'latitude'
+    data_type: 'f8'
+    dim: ['nodes']
+    fill_value: '-999'
+    short_name: 'lat'
+
+nodes:
+    name: 'nodes'
+    dim: ['nodes']
+    data_type: 'i8'
+    units: '1'
+    long_name: 'node count'
+    start_index: 0
+
+faces:
+    name: 'faces'
+    dim: ['faces']
+    data_type: 'i8'
+    units: '1'
+    long_name: 'face count'
+    start_index: 0
+
+three:
+    name: 'three'
+    dim: ['three']
+    data_type: 'u2'
+    units: '1'
+    long_name: 'dimension for connectivity'
+
+waveHs:
+    name: 'waveHs'
+    long_name: 'significant height of wind and swell waves'
+    standard_name: 'sea_surface_wave_significant_height'
+    globwave_name: 'significant_wave_height'
+    units: 'm'
+    data_type: 'f8'
+    scale_factor: 1
+    add_offset: 0
+    valid_min: 0
+    valid_max: 32000
+    dim: ['time', 'nodes']
+    location: 'node'
+    fill_value: '-999'
+    short_name: 'Wave Height'
+    description: 'Significant Wave Height across the modeled domain'
+#    coverage_content_type:
+##################################################################3
+tri:
+    name: 'connectivity'
+    dim: ['nFaces', 'three']
+    _FillValue: '-999'
 
 time:
     name: 'time'
@@ -47,39 +136,6 @@ yFRF:
     coordinates: 'lat lon'
     description: 'Significant Wave Height across the Modeled Domain from CMTB STWAVE model run'
 
-longitude:
-    name: 'longitude'
-    units: 'm'
-    standard_name: ''
-    long_name: 'Significant Wave Height'
-    data_type: 'f8'
-    dim: ['yFRF','xFRF']
-    fill_value: '-999'
-    short_name: 'lon'
-    coordinates: 'lat lon'
-
-latitude:
-    name: 'latitude'
-    units: 'm'
-    standard_name: ''
-    long_name: 'latitude'
-    data_type: 'f8'
-    dim: [ 'yFRF', 'xFRF']
-    fill_value: '-999'
-    short_name: 'lat'
-    coordinates: 'lat lon'
-
-waveHs:
-    name: 'waveHs'
-    units: 'm'
-    standard_name: ''
-    long_name: 'Significant Wave Height'
-    data_type: 'f8'
-    dim: ['time', 'yFRF', 'xFRF']
-    fill_value: '-999'
-    short_name: 'Wave Height'
-    coordinates: 'lat lon'
-    description: 'Significant Wave Height across the Modeled Domain from CMTB STWAVE model run'
 
 waveTm:
     name: 'waveTm'
@@ -132,6 +188,7 @@ bathymetry:
     coordinates: 'Xshore Yshore'
     description: 'Modeled Bathymetry for CMTB run measured from NAVD88) with positive values down.'
     least_significant_digit: 2
+    positive: 'down'
 
 xRadGrad:
     name: 'xRadGrad'

@@ -276,7 +276,8 @@ def write_data_to_nc(ncfile, template_vars, data_dict):
     # List all possible variable attributes in the template
     possible_var_attr = ['standard_name', 'long_name', 'coordinates', 'flag_values', 'flag_meanings', 'description',
                          'notes', 'positive', 'valid_min', 'valid_max', 'calendar', 'description', 'cf_role',
-                         'missing_value']
+                         'missing_value', 'topology_dimension', 'node_coordinates', "face_node_connectivity",
+                         "face_node_connectivity", "face_dimension", "start_index"]
     
     # Write variables to file
     for var in accept_vars:  # only write varibles that were loaded from [_variables] attirbute in .yaml file
@@ -305,8 +306,8 @@ def write_data_to_nc(ncfile, template_vars, data_dict):
                 new_var.units = template_vars[var]["units"]
                 
                 # Write the attributes
-                for attr in possible_var_attr:  # only write attributes listed in this list above
-                    if attr in template_vars[var]:
+                for attr in template_vars[var]:  # possible_var_attr:  # only write attributes listed in this list above
+                    if attr in template_vars[var] and attr != 'name':
                         if template_vars[var][attr] == 'NaN':
                             setattr(new_var, attr, np.nan)
                         else:
@@ -338,10 +339,10 @@ def write_data_to_nc(ncfile, template_vars, data_dict):
                     else:
                         try:
                             new_var[:] = data_dict[var]
-                        except IndexError:
+                        except IndexError as e:
                             try:
                                 new_var[:] = data_dict[var][0][0]
-                            except Exception as e:
+                            except Exception:
                                 raise e
                 
                 elif len(template_vars[var]["dim"]) == 2:
