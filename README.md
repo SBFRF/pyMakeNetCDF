@@ -24,3 +24,5 @@ see `example.py` for a working example converting Wave Watch 3 station output to
 
 Check the issues page for areas of active development or contribution suggestions.
 
+# acknowledgements
+this work was built off of work originally developed by RPS ASA. 
