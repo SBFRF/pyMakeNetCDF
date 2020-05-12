@@ -18,13 +18,13 @@ with open('mesh.pickle', 'rb') as fid:
     meshdata = pickle.load(fid)
     
 # start index = 1
-nNodes = 108403  #?
-nFaces = 216804  #?
 
-connectivity = np.ma.masked_all((meshdata['cell_data']['triangle'][-1,0], 3), dtype=int)
-faceNum = np.append(meshdata['cell_data']['vertex'][:, 0], meshdata['cell_data']['triangle'][:, 0])
-connectivity[:meshdata['cell_data']['vertex'][:,-1].shape[0], 0] = meshdata['cell_data']['vertex'][:,-1]
-connectivity[-meshdata['cell_data']['triangle'].shape[0]:, -3:] = meshdata['cell_data']['triangle'][:,-3:]
+faceNum = meshdata['cell_data']['triangle'][:, 4] #np.append(meshdata['cell_data']['vertex'][:, 0], meshdata['cell_data']['triangle'][:, 0])
+
+connectivity = np.ma.masked_all((np.size(faceNum), 3), dtype=int)
+# connectivity[:meshdata['cell_data']['vertex'][:,-1].shape[0], 0] = meshdata['cell_data']['vertex'][:,-1]
+#connectivity[-meshdata['cell_data']['triangle'].shape[0]:, -3:] = meshdata['cell_data']['triangle'][:,-3:]
+connectivity[:, :] = meshdata['cell_data']['triangle'][:,-3:]
 # connectivity[-meshdata['cell_data']['triangle'].shape[0]:, 1] = meshdata['cell_data']['triangle'][:,4]
 nodeNum = np.arange(meshdata['points'].shape[0], dtype=int)
 
@@ -34,8 +34,8 @@ out = {'time':  nc.date2num(nc.num2date(ncfile['time'][:], ncfile['time'].units)
        'meshName': -999,
        'connectivity': connectivity,
        'three': np.ones((3)) * -999,
-       'faces': faceNum -1, # set to zero index
-       'nodes': nodeNum,
+       'nFaces': faceNum - 1, # set to zero index
+       'nNodes': nodeNum,
        'waveHs': ncfile['hs'][:],
        }
 
@@ -54,7 +54,7 @@ check_suite = CheckSuite()
 check_suite.load_all_available_checkers()
 
 path = 'test.nc'
-checker_names = ['cf', 'acdd', 'UGRID']
+checker_names = ['UGRID']
 verbose = 0
 criteria = 'normal'
 output_filename = 'report.json'
@@ -69,17 +69,17 @@ return_value, errors = ComplianceChecker.run_checker(path,
 # Open the JSON output and get the compliance scores
 with open(output_filename, 'r') as fp:
     cc_data = json.load(fp)
-    scored = cc_data[cc_test[0]]['scored_points']
-    possible = cc_data[cc_test[0]]['possible_points']
-    log.debug('CC Scored {} out of {} possible points'.format(scored, possible))
+    scored = cc_data[checker_names[0]]['scored_points']
+    possible = cc_data[checker_names[0]]['possible_points']
+    # log.debug('CC Scored {} out of {} possible points'.format(scored, possible))
 
 
 
 
 
-psy.plot.mapplot('http://www.smast.umassd.edu:8080/thredds/dodsC/FVCOM/NECOFS/Forecasts/NECOFS_GOM3_FORECAST.nc')
-psy.plot.mapplot('http://geoport.usgs.esipfed.org/thredds/dodsC/estofs/atlantic')
-psy.plot.mapplot('test.nc')
+# psy.plot.mapplot('http://www.smast.umassd.edu:8080/thredds/dodsC/FVCOM/NECOFS/Forecasts/NECOFS_GOM3_FORECAST.nc')
+# psy.plot.mapplot('http://geoport.usgs.esipfed.org/thredds/dodsC/estofs/atlantic')
+# psy.plot.mapplot('test.nc')
 
 lon = ug.nodes[:, 0]
 lat = ug.nodes[:, 1]
