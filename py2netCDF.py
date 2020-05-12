@@ -280,7 +280,7 @@ def write_data_to_nc(ncfile, template_vars, data_dict):
                          "face_node_connectivity", "face_dimension", "start_index"]
     
     # Write variables to file
-    for var in accept_vars:  # only write varibles that were loaded from [_variables] attirbute in .yaml file
+    for var in accept_vars:  # only write variables that were loaded from [_variables] attribute in .yaml file
         if var in data_dict:
             try:
                 if "fill_value" in template_vars[var] and "least_significant_digit" in template_vars[var]:

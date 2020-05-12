@@ -40,12 +40,12 @@ out = {'time':  nc.date2num(nc.num2date(ncfile['time'][:], ncfile['time'].units)
        }
 
 p2nc.makenc_generic('test.nc', globalYaml='field_globalmeta.yml', varYaml='Field_var.yml', data=out)
-# ug = pug.UGrid.from_ncfile('test.nc')
-# ug.build_edges()
-# print('There are {} x {} nodes'.format(*ug.nodes.shape))
-# print('There are {} x {} edges'.format(*ug.edges.shape))
-# print('There are {} x {} faces'.format(*ug.faces.shape))
-# print('First 5 elements of the connectivity array are:\n\n{}'.format(ug.faces[:5]))
+ug = pug.UGrid.from_ncfile('test.nc')
+ug.build_edges()
+print('There are {} x {} nodes'.format(*ug.nodes.shape))
+print('There are {} x {} edges'.format(*ug.edges.shape))
+print('There are {} x {} faces'.format(*ug.faces.shape))
+print('First 5 elements of the connectivity array are:\n\n{}'.format(ug.faces[:5]))
 
 
 ## now check my file to make sure it is compliant

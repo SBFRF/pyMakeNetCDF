@@ -1,5 +1,5 @@
 # Spatial WAVE TEMPLATE
-_variables: ['time', 'longitude', 'latitude', 'nodes', 'meshName', 'three', 'faces', 'waveHs']
+_variables: ['time', 'longitude', 'latitude', 'connectivity', 'nodes', 'meshName', 'three', 'faces', 'waveHs']
 _attributes: ['notes']
 _dimensions: ['time', 'faces', 'nodes', 'three']
 
@@ -22,6 +22,9 @@ connectivity:
     long_name: "Topology data of 2D unstructured mesh"
     node_coordinates: ["latitude", "longitude"]
     face_dimension: "nFaces"
+    data_type: 'i8'
+    units: '1'
+    dim: ['faces', 'three']
     notes: 'This variable describes the connectivity between nodes'
 
 longitude:
