@@ -34,9 +34,9 @@ out = {'time':  nc.date2num(nc.num2date(ncfile['time'][:], ncfile['time'].units)
        'meshName': -999,
        'connectivity': connectivity,
        'three': np.ones((3)) * -999,
-       'nFaces': faceNum - 1, # set to zero index
-       'nNodes': nodeNum,
-       'waveHs': ncfile['hs'][:],
+       'nfaces': faceNum - 1, # set to zero index
+       'nnodes': nodeNum,
+       'waveHs': np.ma.masked_array(ncfile['hs'][:], mask=ncfile['hs']._FillValue)
        }
 
 p2nc.makenc_generic('test.nc', globalYaml='field_globalmeta.yml', varYaml='Field_var.yml', data=out)
@@ -85,13 +85,25 @@ lon = ug.nodes[:, 0]
 lat = ug.nodes[:, 1]
 edges = ug.edges
 faces = ug.faces
-triang = tri.Triangulation(lon, lat, triangles=faces)
+triang = tri.Triangulation(lon, lat)
+waveHs = nc.Dataset('test.nc')['waveHs'][-1,:]
 def make_map(projection=ccrs.PlateCarree()):
     fig, ax = plt.subplots(figsize=(8, 6),
                            subplot_kw=dict(projection=projection))
-    ax.coastlines(resolution='50m', zorder=1)
+    ax.coastlines(resolution='10m', zorder=1)
     gl = ax.gridlines(draw_labels=True)
     gl.xlabels_top = gl.ylabels_right = False
     gl.xformatter = LONGITUDE_FORMATTER
     gl.yformatter = LATITUDE_FORMATTER
     return fig, ax
+fig, ax = make_map()
+kw = dict(marker='.', linestyle='-', alpha=0.35, color='darkgray', zorder=0)
+lines = ax.triplot(triang, **kw)
+mappable = ax.tripcolor(triang, waveHs)
+cbar = plt.colorbar(mappable)
+cbar.set_label('WaveHeight [m]')
+
+fig, ax = make_map()
+ax.tricontour(triang, waveHs, colors='lightgray')
+cs = ax.tricontourf(triang, waveHs)
+cbar = fig.colorbar(cs, shrink=0.65, extend='both')

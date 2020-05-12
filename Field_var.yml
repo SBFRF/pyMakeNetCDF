@@ -1,7 +1,7 @@
 # Spatial WAVE TEMPLATE
-_variables: ['time', 'longitude', 'latitude', 'connectivity', 'nNodes', 'meshName', 'three', 'nFaces', 'waveHs']
+_variables: ['time', 'longitude', 'latitude', 'connectivity', 'nnodes', 'meshName', 'three', 'nfaces', 'waveHs']
 _attributes: ['notes']
-_dimensions: ['time', 'nFaces', 'nNodes', 'three']
+_dimensions: ['time', 'nfaces', 'nnodes', 'three']
 
 meshName:
     name: 'meshName'
@@ -9,7 +9,7 @@ meshName:
     topology_dimension: 2
     node_coordinates: 'latitude longitude'    # points to the auxiliary coordinate variables representing the node locations (latitude,
     face_node_connectivity: 'connectivity'    # points to an index variable identifying for every face (here consistently triangle) the indices of its three corner nodes. The corner nodes should be specified in anticlockwise (also referred to as counterclockwise) direction as viewed from above (consistent with the CF-convention for bounds of p-sided cells). The connectivity array will thus be a matrix of size nFaces x 3.
-    face_dimension: 'nFaces'
+    face_dimension: 'nfaces'
     notes: 'this variable contains no data.  It is solely here to describe the mesh and where appropriate data are. The attributes are used to point to variables describing the mesh topology'
     data_type: 'i2'
     dim: []
@@ -21,10 +21,10 @@ connectivity:
     start_index: 0
     long_name: "Topology data of 2D unstructured mesh"
     node_coordinates: ["latitude", "longitude"]
-    face_dimension: "nFaces"
+    face_dimension: "nfaces"
     data_type: 'i8'
     units: '1'
-    dim: ['nFaces', 'three']
+    dim: ['nfaces', 'three']
     notes: 'This variable describes the connectivity between nodes'
 
 longitude:
@@ -34,7 +34,7 @@ longitude:
     standard_name: 'longitude'
     long_name: 'longitude'
     data_type: 'f8'
-    dim: ['nNodes']
+    dim: ['nnodes']
     fill_value: '-999'
     short_name: 'lon'
 
@@ -45,21 +45,21 @@ latitude:
     standard_name: 'latitude'
     long_name: 'latitude'
     data_type: 'f8'
-    dim: ['nNodes']
+    dim: ['nnodes']
     fill_value: '-999'
     short_name: 'lat'
 
-nNodes:
-    name: 'nNodes'
-    dim: ['nNodes']
+nnodes:
+    name: 'nnodes'
+    dim: ['nnodes']
     data_type: 'i8'
     units: '1'
     long_name: 'node count'
     start_index: 0
 
-nFaces:
-    name: 'nFaces'
-    dim: ['nFaces']
+nfaces:
+    name: 'nfaces'
+    dim: ['nfaces']
     data_type: 'i8'
     units: '1'
     long_name: 'face count'
@@ -83,7 +83,7 @@ waveHs:
     add_offset: 0
     valid_min: 0
     valid_max: 32000
-    dim: ['time', 'nNodes']
+    dim: ['time', 'nnodes']
     location: 'node'
     fill_value: '-999'
     short_name: 'Wave Height'
