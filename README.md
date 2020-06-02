@@ -11,10 +11,15 @@ The code requires inputs additional to the data types listed above:
                                               and `comp_level` attributecompression capability
     2. can use significant digits to combine with that
     3. can assign data types for different precisions 
-        - strings (S1, S2, S4, S8) 
-        - (f1, f2, f4, f8) for floats
-        - (i1, i2, i4, i8) for integers
-        - (u1, u2, u4, u8) for unsigned integers 
+        - strings: 'S1' or 'c' (NC_CHAR) 
+        - bytes: 'i1' or 'b' or 'B'(NC_BYTE)
+        - unsigned bytes: 'u1' (NC_UBYTE)
+        - shorts: 'i2' or 'h' or 's' (NC_SHORT), 
+        - unsigned shorts: 'u2' (NC_USHORT)
+        - integers: 'i4' or 'i' or 'l' (NC_INT), 'i8' (NC_INT64)
+        - unsigned integers: 'u4' (NC_UINT), 'u8' (NC_UINT64)
+        - floats: 'f4' or 'f' (NC_FLOAT), 'f8' or 'd' (NC_DOUBLE)`.
+        
  * global metaData yaml; this holds all of the global netCDF metaData  
 
 # CF conventions
